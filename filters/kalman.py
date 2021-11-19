@@ -1,4 +1,4 @@
- #!/usr/bin/env python3
+# !/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Mar  5 15:59:53 2021
@@ -48,6 +48,8 @@ class ExtendedKalmanFilter(KalmanFilter):
 
         self.X = self.X + K @ y
         self.G = (I - K @ H) @ self.G
+
+
 # %%
 
 
@@ -71,15 +73,18 @@ def test_kalman1d():
         kf.correct(obs, np.eye(1), 0.3 ** 2 * np.eye(1))
     return np.linalg.norm(kf.X - [1])
 
+
 # %%
 
 def test_kalman_odom_imu():
     # x, y, vx, vy, theta, w
     kf = KalmanFilter(np.random.normal([0, 0, 0, 0, 0, 0], 5), np.eye(6))
     for i in range(100):
-        kf.predict([])    
+        kf.predict([])
 
-# %%
+    # %%
+
+
 if __name__ == '__main__':
     r = test_kalman()
     assert r <= 0.1
