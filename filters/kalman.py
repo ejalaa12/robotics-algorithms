@@ -7,14 +7,25 @@ Created on Fri Mar  5 15:59:53 2021
 """
 
 import numpy as np
+from typing import Callable
 
 
 class KalmanFilter:
+    """
+    Generic Kalman Filter Implementation in Python
+    """
+
     def __init__(self, X0: np.ndarray, G0: np.ndarray):
         self.X = X0.copy()
         self.G = G0.copy()
 
-    def predict(self, A: np.ndarray, Q: np.ndarray = None, B: np.ndarray = None, u: np.ndarray = None):
+    def predict(
+        self,
+        A: np.ndarray,
+        Q: np.ndarray | None = None,
+        B: np.ndarray | None = None,
+        u: np.ndarray | None = None,
+    ):
         if B is None or u is None:
             self.X = A @ self.X
         else:
@@ -23,7 +34,7 @@ class KalmanFilter:
             Q = np.zeros(A.shape)
         self.G = A @ self.G @ A.T + Q
 
-    def correct(self, Z: np.ndarray, H: np.ndarray, R: np.ndarray = None):
+    def correct(self, Z: np.ndarray, H: np.ndarray, R: np.ndarray | None = None):
         if R is None:
             R = np.zeros((Z.size, Z.size))
         y = Z - H @ self.X
@@ -37,7 +48,24 @@ class KalmanFilter:
 
 
 class ExtendedKalmanFilter(KalmanFilter):
-    def correct(self, Z: np.ndarray, h: callable, H: np.ndarray, R: np.ndarray = None):
+    def predict(
+        self,
+        f: Callable,
+        jf: Callable,
+        Q: np.ndarray | None = None,
+        u: np.ndarray | None = None,
+    ):
+        if u is None:
+            self.X = f(self.X)
+            JF = jf(self.X)
+        else:
+            self.X = f(self.X, u)
+            JF = jf(self.X, u)
+        if Q is None:
+            Q = np.zeros((self.X.shape[0], self.X.shape[0]))
+        self.G = JF @ self.G @ JF.T + Q
+
+    def correct(self, Z: np.ndarray, h: Callable, H: np.ndarray, R: np.ndarray = None):
         if R is None:
             R = np.zeros((Z.size, Z.size))
         y = Z - h(self.X)
@@ -58,7 +86,7 @@ def test_kalman():
     for i in range(100):
         kf.predict(np.eye(2))
         obs = np.random.normal([1, 2], 0.3)
-        kf.correct(obs, np.eye(2), 0.3 ** 2 * np.eye(2))
+        kf.correct(obs, np.eye(2), 0.3**2 * np.eye(2))
     return np.linalg.norm(kf.X - [1, 2])
 
 
@@ -70,11 +98,12 @@ def test_kalman1d():
     for i in range(100):
         kf.predict(np.eye(1))
         obs = np.random.normal([1], 0.3)
-        kf.correct(obs, np.eye(1), 0.3 ** 2 * np.eye(1))
+        kf.correct(obs, np.eye(1), 0.3**2 * np.eye(1))
     return np.linalg.norm(kf.X - [1])
 
 
 # %%
+
 
 def test_kalman_odom_imu():
     # x, y, vx, vy, theta, w
@@ -85,7 +114,7 @@ def test_kalman_odom_imu():
     # %%
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     r = test_kalman()
     assert r <= 0.1
 

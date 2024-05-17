@@ -7,7 +7,7 @@ Created on Sun Mar  1 14:58:12 2020
 """
 import numpy as np
 from model1D import Model
-from pid import PID
+from controllers.pid import PID
 
 
 # %% External forces
