@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Created on Sun Mar  1 14:58:12 2020
@@ -6,8 +6,8 @@ Created on Sun Mar  1 14:58:12 2020
 @author: ejalaa
 """
 import numpy as np
-from model1D import Model
-from pid import PID
+from models.model1D import Model
+from control.pid import PID
 
 
 # %% External forces
@@ -33,6 +33,7 @@ def w(t):
 # %% SIMULATION
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     m = Model(1, 0, k=0.2)
     pid = PID(10, 1.0, 80, 0)
 
@@ -50,3 +51,5 @@ if __name__ == "__main__":
 
     ax1, ax2 = m.plot(TIME)
     ax1.plot(TIME, W)
+
+    plt.show()

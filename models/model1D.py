@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sun Mar  1 13:42:34 2020
@@ -10,13 +10,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-class Model:
+class Model(object):
     """
     Simple model that evolve in 1D with position and speed
     It has a mass
     """
 
-    def __init__(self, x, v, m=10, k=3):
+    def __init__(self, x, v, m=10., k=3.):
         self.X = np.array([x, v]).reshape(-1, 1)
         self.m = m
         self.k = k
