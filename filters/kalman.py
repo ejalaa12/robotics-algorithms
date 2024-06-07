@@ -7,6 +7,7 @@ Created on Fri Mar  5 15:59:53 2021
 """
 
 import numpy as np
+from typing import Union, Callable
 
 
 class KalmanFilter:
@@ -14,7 +15,7 @@ class KalmanFilter:
         self.X = X0.copy()
         self.G = G0.copy()
 
-    def predict(self, A: np.ndarray, Q: np.ndarray = None, B: np.ndarray = None, u: np.ndarray = None):
+    def predict(self, A: np.ndarray, Q: Union[None, np.ndarray] = None, B: Union[None, np.ndarray] = None, u: Union[None, np.ndarray] = None):
         if B is None or u is None:
             self.X = A @ self.X
         else:
@@ -23,7 +24,7 @@ class KalmanFilter:
             Q = np.zeros(A.shape)
         self.G = A @ self.G @ A.T + Q
 
-    def correct(self, Z: np.ndarray, H: np.ndarray, R: np.ndarray = None):
+    def correct(self, Z: np.ndarray, H: np.ndarray, R: Union[None, np.ndarray] = None):
         if R is None:
             R = np.zeros((Z.size, Z.size))
         y = Z - H @ self.X
@@ -37,7 +38,8 @@ class KalmanFilter:
 
 
 class ExtendedKalmanFilter(KalmanFilter):
-    def correct(self, Z: np.ndarray, h: callable, H: np.ndarray, R: np.ndarray = None):
+
+    def correct(self, Z: np.ndarray, h: Callable, H: np.ndarray, R: Union[None, np.ndarray] = None):
         if R is None:
             R = np.zeros((Z.size, Z.size))
         y = Z - h(self.X)
