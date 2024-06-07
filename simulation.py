@@ -8,6 +8,7 @@ Created on Sun Mar  1 14:58:12 2020
 import numpy as np
 from models.model1D import Model
 from control.pid import PID
+import matplotlib.pyplot as plt
 
 
 # %% External forces
@@ -51,5 +52,6 @@ if __name__ == "__main__":
 
     ax1, ax2 = m.plot(TIME)
     ax1.plot(TIME, W)
+    plt.show()
 
     plt.show()

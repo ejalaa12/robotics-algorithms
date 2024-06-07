@@ -6,6 +6,7 @@ This is a temporary script file.
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 
@@ -73,6 +74,8 @@ print(f"EKF estimated that the system is at {kf.X[0]}, system is at {s.center}")
 
 # todo: il faut gerer le tf server pour pas oublier la lbl frame
 # todo: un serveur pour tcp/udp pour read n'importe quelle sortie gpgga
+
+fig, ax = plt.subplots()
 
 def update(frame):
     pass
