@@ -12,9 +12,12 @@ class MonteCarlo:
     Histogram does the same but discretizes the space, so less accurate
     """
 
-    def __init__(self, width: Union[list, np.ndarray],
-                 initial_estimate: Union[list, np.ndarray],
-                 n: int = 200):
+    def __init__(
+        self,
+        width: Union[list, np.ndarray],
+        initial_estimate: Union[list, np.ndarray],
+        n: int = 200,
+    ):
         """
         Initialize the particle filter with `n` particles with a uniform distribution in a box
         of width `width` centered around the `initial_estimate` point.
@@ -28,8 +31,11 @@ class MonteCarlo:
         if isinstance(initial_estimate, list):
             initial_estimate = np.array(initial_estimate)
 
-        self.particles = np.random.uniform(initial_estimate - width / 2, initial_estimate + width / 2,
-                                           (n, initial_estimate.size))
+        self.particles = np.random.uniform(
+            initial_estimate - width / 2,
+            initial_estimate + width / 2,
+            (n, initial_estimate.size),
+        )
         self.weights = np.zeros((n, 1)) + 1 / n
 
     def update_motion(self, f: Callable[[np.ndarray], np.ndarray], u: np.ndarray):
@@ -52,7 +58,9 @@ class MonteCarlo:
         :param h: the observation function
         :param z: the observation of the sensor
         """
-        self.weights = np.apply_along_axis(h, 1, np.hstack((self.particles, self.weights)), z).reshape(-1, 1)
+        self.weights = np.apply_along_axis(
+            h, 1, np.hstack((self.particles, self.weights)), z
+        ).reshape(-1, 1)
 
     def resample(self):
         """
@@ -60,12 +68,15 @@ class MonteCarlo:
         :return:
         """
         n = self.particles.shape[0]
-        indices = np.random.choice(n, p=self.weights.flatten() / np.sum(self.weights), size=n)
+        indices = np.random.choice(
+            n, p=self.weights.flatten() / np.sum(self.weights), size=n
+        )
         self.particles = self.particles[indices]
         self.weights = np.zeros((n, 1)) + 1 / n
 
 
 # %% Test monte carlo
+
 
 class Robot:
     def __init__(self, x, y):
@@ -95,7 +106,7 @@ plt.figure()
 def draw():
     plt.cla()
     plt.scatter(m.particles[:, 0], m.particles[:, 1], s=m.weights * 100)
-    plt.scatter(r.X[0], r.X[1], color='r')
+    plt.scatter(r.X[0], r.X[1], color="r")
 
 
 draw()
@@ -103,13 +114,14 @@ draw()
 
 # %% Assume we observe x, the sensor likelihood function is as follows:
 
+
 def hx(x, z):
-    gauss = lambda x, mu, sigma: np.exp(- (x - mu) ** 2 / (2 * sigma ** 2))
+    gauss = lambda x, mu, sigma: np.exp(-((x - mu) ** 2) / (2 * sigma**2))
     return gauss(x[0], z, 0.2)
 
 
 def hy(x, z):
-    gauss = lambda x, mu, sigma: np.exp(- (x - mu) ** 2 / (2 * sigma ** 2))
+    gauss = lambda x, mu, sigma: np.exp(-((x - mu) ** 2) / (2 * sigma**2))
     return gauss(x[1], z, 0.2)
 
 
@@ -125,7 +137,7 @@ m = MonteCarlo([8, 10], [0, 0], n=2000)
 r = Robot(-1.7, -1.3)
 fig = plt.figure()
 sc = plt.scatter(m.particles[:, 0], m.particles[:, 1], s=m.weights * 1000)
-sc2 = plt.scatter(r.X[0], r.X[1], color='r', marker='.')
+sc2 = plt.scatter(r.X[0], r.X[1], color="r", marker=".")
 
 
 def update(frame):
@@ -139,11 +151,11 @@ def update(frame):
     r.update(np.array([-np.sin(frame / 10), -np.cos(frame / 10)]), 0.1)
     m.update_motion(f, [-np.sin(frame / 10) * 0.1, -np.cos(frame / 10) * 0.1])
     # if frame % 3 == 0:
-    #     if frame % 6 == 0: 
+    #     if frame % 6 == 0:
     #         print("update sensor x")
     #         m.update_sensor(hx, r.x)
     #         m.resample()
-    #     else: 
+    #     else:
     #         print("update sensor y")
     #         m.update_sensor(hy, r.y)
     #         m.resample()
@@ -158,7 +170,7 @@ def update(frame):
     sc.set_offsets(m.particles)
     sc.set_sizes(m.weights.flatten() * k)
     sc2.set_offsets(r.X)
-    sc2.set_color('r')
+    sc2.set_color("r")
     return sc, sc2
 
 
@@ -167,10 +179,9 @@ def plot_covariance(data):
     (l1, l2), (x1, x2) = np.linalg.eig(cov)
     a1, a2 = np.sqrt(l1), np.sqrt(l2)
     angle = np.atan2(l2, l1)
-    rot = Rot.from_euler('z', angle).as_matrix()[:2, :2]
+    rot = Rot.from_euler("z", angle).as_matrix()[:2, :2]
 
 
 # %%
-ani = FuncAnimation(fig, update, interval=100,
-                    blit=True)
+ani = FuncAnimation(fig, update, interval=100, blit=True)
 plt.show()
