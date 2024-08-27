@@ -1,6 +1,6 @@
 from typing import List, Union
 import numpy as np
-from filters.kalman.kalman import KalmanFilter
+from filters.kalman.kalman import KalmanFilter, LinearObservation
 import matplotlib.pyplot as plt
 
 plt.rcParams["text.usetex"] = True
@@ -13,6 +13,13 @@ times = np.arange(0, duration, dt)
 # System
 true_state = np.array([0.0, 0.0]).reshape(-1, 1)
 mes_noise = 0.02
+
+
+class ObservationModelV(LinearObservation):
+
+    def get_observation_matrix(self) -> Union[np.ndarray, None]:
+        pass
+
 
 # Model with constant velocity: X = (x, v)
 class ConstantVelocityKF(KalmanFilter):

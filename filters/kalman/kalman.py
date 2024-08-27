@@ -162,7 +162,7 @@ class KalmanFilter(ABC):
                     f"Covariance size must be either the same size as X0 (diagonal), or equivalent square matrix"
                 )
 
-        self.distribution = GaussianDistribution(self.X, self.G)
+        self.distribution = GaussianDistribution(X0, G0)
 
     @abstractmethod
     def compute_state_transition_matrix(self) -> np.ndarray:
@@ -185,41 +185,44 @@ class KalmanFilter(ABC):
             self.distribution.mean, self.distribution.covariance, A, Q, B, u
         )
 
-    def _correct(self, observation: LinearObservation):
+    def correct(self, observation: LinearObservation):
         obs = observation.distribution.mean
         H = observation.get_observation_matrix()
         R = observation.distribution.covariance
-        self.X, self.G = kalman_correct(self.X, self.G, H, obs, R)
+        self.distribution.mean, self.distribution.covariance = kalman_correct(self.distribution.mean, self.distribution.covariance, H, obs, R)
 
 
-class ExtendedKalmanFilter(KalmanFilter):
+# class ExtendedKalmanFilter(KalmanFilter):
+#     """
+#     TODO(ejalaa12): replace with LinearizedObservation
+#     """
 
-    def predict2(
-        self,
-        f: Callable[[np.ndarray], np.ndarray],
-        ja: Callable,
-        Q: Union[None, np.ndarray] = None,
-        jB: Union[None, Callable] = None,
-    ):
-        pass
+#     def predict2(
+#         self,
+#         f: Callable[[np.ndarray], np.ndarray],
+#         ja: Callable,
+#         Q: Union[None, np.ndarray] = None,
+#         jB: Union[None, Callable] = None,
+#     ):
+#         pass
 
-    def correct(
-        self,
-        Z: np.ndarray,
-        h: Callable,
-        H: np.ndarray,
-        R: Union[None, np.ndarray] = None,
-    ):
-        if R is None:
-            R = np.zeros((Z.size, Z.size))
-        y = Z - h(self.X)
-        S = H @ self.G @ H.T + R
-        K = self.G @ H.T @ np.linalg.inv(S)
+#     def correct(
+#         self,
+#         Z: np.ndarray,
+#         h: Callable,
+#         H: np.ndarray,
+#         R: Union[None, np.ndarray] = None,
+#     ):
+#         if R is None:
+#             R = np.zeros((Z.size, Z.size))
+#         y = Z - h(self.X)
+#         S = H @ self.G @ H.T + R
+#         K = self.G @ H.T @ np.linalg.inv(S)
 
-        I = np.eye(self.G.shape[0])
+#         I = np.eye(self.G.shape[0])
 
-        self.X = self.X + K @ y
-        self.G = (I - K @ H) @ self.G
+#         self.X = self.X + K @ y
+#         self.G = (I - K @ H) @ self.G
 
 
 # %%
