@@ -1,6 +1,6 @@
 from typing import List, Union
 import numpy as np
-from filters.kalman import KalmanFilter
+from filters.kalman.kalman import KalmanFilter
 import matplotlib.pyplot as plt
 
 plt.rcParams["text.usetex"] = True
@@ -19,10 +19,14 @@ class ConstantVelocityKF(KalmanFilter):
     def __init__(self, X0: Union[List, np.ndarray], G0: Union[List, np.ndarray]):
         super().__init__(X0, G0)
 
-    def predict2(self):
-        A = np.array([[1, dt], [0, 1]])
-        Q = dt * np.diag([0.1, 0.01])  # this is the
-        return super().predict(A, Q)
+    def compute_state_transition_matrix(self) -> np.ndarray:
+        return np.array([[1, dt], [0, 1]])
+
+    def compute_control_input_model_matrix(self) -> Union[np.ndarray, None]:
+        return None
+
+    def compute_process_noise(self) -> np.ndarray:
+        return dt * np.diag([0.1, 0.01])  # this is the
 
     def correct2(self, z):
         # - and velocity observable
@@ -42,7 +46,7 @@ class OdoModelKF(KalmanFilter):
     def __init__(self, X0: Union[List, np.ndarray], G0: Union[List, np.ndarray]):
         super().__init__(X0, G0)
 
-    def predict2(self, u: np.ndarray):
+    def predict(self, u: np.ndarray):
         A = np.eye(self.X.shape[0])
         B = 
         return super().predict(A, Q, B, u)
@@ -66,7 +70,7 @@ for t in times[:-1]:
     measurement = true_state[1] + np.random.normal(0, mes_noise)
 
     # update estimator
-    kf.predict2()
+    kf.predict()
     kf.correct2(measurement)
 
     # save new states
