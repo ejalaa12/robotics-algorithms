@@ -1,6 +1,6 @@
 from typing import List, Union
 import numpy as np
-from filters.kalman.kalman import KalmanFilter, LinearObservation
+from filters.kalman.kalman import KalmanFilter, LinearObservation, GaussianDistribution
 import matplotlib.pyplot as plt
 
 plt.rcParams["text.usetex"] = True
@@ -18,7 +18,7 @@ mes_noise = 0.02
 class ObservationModelV(LinearObservation):
 
     def get_observation_matrix(self) -> Union[np.ndarray, None]:
-        pass
+        return np.array([[0, 1]])
 
 
 # Model with constant velocity: X = (x, v)
@@ -35,62 +35,66 @@ class ConstantVelocityKF(KalmanFilter):
     def compute_process_noise(self) -> np.ndarray:
         return dt * np.diag([0.1, 0.01])  # this is the
 
-    def correct2(self, z):
-        # - and velocity observable
-        C = np.array([[0, 1]])
-        R = np.diag([mes_noise])
-        return super().correct(z, C, R)
 
-kf = ConstantVelocityKF([0, 0], [0.1, 1])
-
-all_X = [kf.X.copy()]
-all_G = [kf.G.copy()]
-all_true_X = [true_state.copy()]
-
-
-# Other kalman with speed as prediction model
 class OdoModelKF(KalmanFilter):
     def __init__(self, X0: Union[List, np.ndarray], G0: Union[List, np.ndarray]):
         super().__init__(X0, G0)
+        assert self.distribution.mean.size == 1
 
-    def predict(self, u: np.ndarray):
-        A = np.eye(self.X.shape[0])
-        B = 
-        return super().predict(A, Q, B, u)
+    def compute_state_transition_matrix(self) -> np.ndarray:
+        return np.eye(1)
 
-kf2 = KalmanFilter([0], [0.1])
+    def compute_control_input_model_matrix(self) -> Union[np.ndarray, None]:
+        return np.eye(1) * dt
 
+    def compute_process_noise(self) -> np.ndarray:
+        return dt * np.diag([0.01])  # this is the
+
+kf = ConstantVelocityKF([0, 0], [0.1, 1])
+kf2 = OdoModelKF([0], [0.1])
+
+all_kf_dist = [kf.distribution.copy()]
+all_kf2_dist = [kf2.distribution.copy()]
+all_true_X = [true_state.copy()]
 
 # speed command
-def speed_command(t):
+def speed_command(t=None):
     return 1.0
 
 
 for t in times[:-1]:
     # speed command
     u = speed_command(t)
-    # update system
+    # update true system
     true_state[0] += true_state[1] * dt
     true_state[1] = u
 
     # do measurement of speed
     measurement = true_state[1] + np.random.normal(0, mes_noise)
+    measurement = GaussianDistribution(measurement, mes_noise**2)
 
-    # update estimator
+    # update constant velocity estimator 
     kf.predict()
-    kf.correct2(measurement)
+    kf.correct(ObservationModelV(measurement))
+    # update odo model estimator (no corrections, only prediction)
+    kf2.predict(np.array([u]))
+
 
     # save new states
     all_true_X.append(true_state.copy())
-    all_X.append(kf.X.copy())
-    all_G.append(kf.G.copy())
+    all_kf_dist.append(kf.distribution.copy())
+    all_kf2_dist.append(kf2.distribution.copy())
 
 # %% numpify paths
-all_X = np.array(all_X)
-all_G = np.array(all_G)
+all_X = [dist.mean for dist in all_kf_dist]
+all_X = np.array([dist.mean for dist in all_kf_dist]).reshape(-1, kf.distribution.mean.size)
+all_G = np.array([dist.covariance for dist in all_kf_dist])
+all_X2 = np.array([dist.mean for dist in all_kf2_dist]).reshape(-1, kf2.distribution.mean.size)
+all_G2 = np.array([dist.covariance for dist in all_kf2_dist])
 all_true_X = np.array(all_true_X)
 
 print(all_X.shape)
+print(all_X2.shape)
 print(all_G.shape)
 print(all_true_X.shape)
 

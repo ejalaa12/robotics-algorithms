@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "robotics-algorithms"
+version = "0.1.0"
+description = ""
+authors = ["El Jawad Alaa <ejalaa12@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^2.1.0"
+scipy = "^1.14.1"
+control = "^0.10.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

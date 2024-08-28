@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "KF odo",
+            "detail": "Run Kf odo example",
+            "type": "shell",
+            "command": "poetry run python3 kf_odo.py"
+        },
+        {
+            "label": "JupyterLab",
+            "detail": "Run JupyterLab",
+            "type": "shell",
+            "command": "poetry run jupyter lab"
+        }
+    ]
+}

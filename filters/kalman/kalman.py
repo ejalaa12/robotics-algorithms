@@ -20,6 +20,9 @@ def validate_predict_size(A, x, B, u):
         raise ValueError(
             f"A shape must be ({n}, {n}) like x, got {A.shape=} vs {x.shape=}"
         )
+    if x.shape != (n, 1):
+        if x.shape != (n,):
+            raise ValueError(f"x shape must be ({n}, 1) or ({n},), got {x.shape=}")
     if B.shape != (n, m):
         raise ValueError(
             f"B shape must be ({n}, {m}) like u, got {B.shape=} vs {u.shape=}"
@@ -48,6 +51,7 @@ def kalman_predict(
     """
     # compute input sizes (for size checking)
     n = X_prev.size
+    X_prev = X_prev.reshape((n, 1))
     m = 0
     if u:
         m = u.size
@@ -91,6 +95,7 @@ class State(np.ndarray):
     - https://numpy.org/doc/stable/user/basics.subclassing.html
     - https://realpython.com/python-magic-methods/
     """
+
     def __init__(self, array, names):
         assert array.size == len(names)
 
@@ -99,6 +104,9 @@ class State(np.ndarray):
 class GaussianDistribution:
     mean: np.ndarray
     covariance: np.ndarray
+
+    def copy(self):
+        return GaussianDistribution(self.mean.copy(), self.covariance.copy())
 
 
 class Measurement:
@@ -151,12 +159,12 @@ class KalmanFilter(ABC):
         :param G0: the covariance associated to the initial estimate
         """
         if isinstance(X0, list):
-            X0 = np.array(X0)
+            X0 = np.array(X0).reshape(-1, 1)
         if isinstance(G0, list):
-            if len(G0) == len(X0) ** 2:
-                G0 = np.array(G0)
-            elif len(G0) == len(X0):
+            if len(G0) == len(X0):
                 G0 = np.diag(G0)
+            elif len(G0) == len(X0) ** 2:
+                G0 = np.array(G0)
             else:
                 raise ValueError(
                     f"Covariance size must be either the same size as X0 (diagonal), or equivalent square matrix"
@@ -180,7 +188,6 @@ class KalmanFilter(ABC):
         A = self.compute_state_transition_matrix()
         B = self.compute_control_input_model_matrix()
         Q = self.compute_process_noise()
-        x, g = self.distribution.mean, self.distribution.covariance
         self.distribution.mean, self.distribution.covariance = kalman_predict(
             self.distribution.mean, self.distribution.covariance, A, Q, B, u
         )
@@ -189,7 +196,9 @@ class KalmanFilter(ABC):
         obs = observation.distribution.mean
         H = observation.get_observation_matrix()
         R = observation.distribution.covariance
-        self.distribution.mean, self.distribution.covariance = kalman_correct(self.distribution.mean, self.distribution.covariance, H, obs, R)
+        self.distribution.mean, self.distribution.covariance = kalman_correct(
+            self.distribution.mean, self.distribution.covariance, H, obs, R
+        )
 
 
 # class ExtendedKalmanFilter(KalmanFilter):
