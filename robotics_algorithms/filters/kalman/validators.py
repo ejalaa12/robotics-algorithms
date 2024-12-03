@@ -10,4 +10,7 @@ def is_square_matrix(m: np.ndarray) -> bool:
 def state_and_covariance_shapes_compatible(state: np.ndarray, cov: np.ndarray) -> bool:
     return is_square_matrix(cov) and state.size == cov.shape[0]
 
+def validate_state_shape(x: np.ndarray) -> bool:
+    return x.ndim == 2 and x.shape[1] == 1
+
 

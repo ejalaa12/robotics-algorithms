@@ -7,9 +7,11 @@ Created on Fri Mar  5 15:59:53 2021
 """
 
 import numpy as np
-from typing import Union, Callable, List
+from typing import Union, List
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+
+from robotics_algorithms.filters.kalman.core import kalman_correct
 
 
 def validate_predict_size(A, x, B, u):
@@ -72,21 +74,6 @@ def kalman_predict(
     G = A @ G_prev @ A.T + Q
 
     return X, G
-
-
-def kalman_correct(X, G, H, Z, R):
-    if R is None:
-        R = np.zeros((Z.size, Z.size))
-    y = Z - H @ X
-    S = H @ G @ H.T + R
-    K = G @ H.T @ np.linalg.inv(S)
-
-    I = np.eye(G.shape[0])
-
-    new_X = X + K @ y
-    new_G = (I - K @ H) @ G
-
-    return new_X, new_G
 
 
 class State(np.ndarray):

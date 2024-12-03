@@ -1,6 +1,6 @@
 from typing import List, Union
 import numpy as np
-from filters.kalman.kalman import KalmanFilter, LinearObservation, GaussianDistribution
+from robotics_algorithms.filters.kalman.kalman import KalmanFilter, LinearObservation, GaussianDistribution
 import matplotlib.pyplot as plt
 
 plt.rcParams["text.usetex"] = True
@@ -59,6 +59,11 @@ all_true_X = [true_state.copy()]
 
 # speed command
 def speed_command(t=None):
+    if t < duration / 3:
+        return 1.0
+    if t < 2 * duration / 3:
+        return 0.0
+
     return 1.0
 
 
@@ -101,7 +106,10 @@ print(all_true_X.shape)
 # %% plot
 fig, (ax1, ax2) = plt.subplots(2, 1)
 ax1.plot(times, all_true_X[:, 0], label="$x$")
-ax1.errorbar(times, all_X[:, 0], np.sqrt(all_G[:, 0, 0]) * 3, label=r"$\hat{x}$")
+ax1.plot(times, all_X[:, 0], label=r"$\hat{x}$")
+ax1.plot(times, all_X2[:, 0], label=r"$\hat{x_2}$")
+# ax1.errorbar(times, all_X[:, 0], np.sqrt(all_G[:, 0, 0]) * 3, label=r"$\hat{x}$")
+# ax1.errorbar(times, all_X2[:, 1], np.sqrt(all_G[:, 0, 0]) * 3, label=r"$\hat{x}$")
 ax1.legend()
 
 ax2.plot(times, all_true_X[:, 1], label="$v$")

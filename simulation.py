@@ -6,8 +6,8 @@ Created on Sun Mar  1 14:58:12 2020
 @author: ejalaa
 """
 import numpy as np
-from models.model1D import Model
-from control.pid import PID
+from robotics_algorithms.models.model1D import Model
+from robotics_algorithms.control import PID
 import matplotlib.pyplot as plt
 
 
