@@ -1,5 +1,6 @@
 import numpy as np
-from robotics_algorithms import control as ct
+
+import control as ct
 
 
 class DubinsCar(ct.NonlinearIOSystem):
@@ -34,8 +35,6 @@ class DubinsCar(ct.NonlinearIOSystem):
         return [theta]
 
 
-
-
 if __name__ == "__main__":
     car = DubinsCar()
     dt = 0.1
@@ -44,6 +43,7 @@ if __name__ == "__main__":
     sol = ct.input_output_response(car, t, u, [0, 0, 0])
 
     import matplotlib.pyplot as plt
+
     fig, (ax1, ax2, ax3) = plt.subplots(3)
     ax1.plot(sol.states[0], sol.states[1])
     ax2.plot(sol.t, sol.inputs[0])

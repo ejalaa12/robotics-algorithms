@@ -6,7 +6,9 @@ from robotics_algorithms.utils.math import wrap_to_pi
 
 
 # %%
-def generate_rotation_commands(num_rotations=3, forward_time=5, rotation_time=2, peak_w=1.0):
+def generate_rotation_commands(
+    num_rotations=3, forward_time=5, rotation_time=2, peak_w=1.0
+):
     """
     Generate a sequence of angular rotation speed (w) commands for a vehicle to perform multiple rotations to the left.
 
@@ -46,11 +48,15 @@ def generate_rotation_commands(num_rotations=3, forward_time=5, rotation_time=2,
     return time_points, commands
 
 
-def generate_rotation_commands_interp(time_points, num_rotations=3, forward_time=5, rotation_time=2, peak_w=1.0):
+def generate_rotation_commands_interp(
+    time_points, num_rotations=3, forward_time=5, rotation_time=2, peak_w=1.0
+):
     """
     Same as above method, but will interpolate the values to the given time_points
     """
-    t, c = generate_rotation_commands(num_rotations, forward_time, rotation_time, peak_w)
+    t, c = generate_rotation_commands(
+        num_rotations, forward_time, rotation_time, peak_w
+    )
     return np.interp(time_points, t, c)
 
 
@@ -71,7 +77,7 @@ def can_log():
 
 
 class BicycleModel:
-    def __init__(self, x0=0, y0=0, v0=0, theta0=0, w0=0, length=1, name=''):
+    def __init__(self, x0=0, y0=0, v0=0, theta0=0, w0=0, length=1, name=""):
         self.length = length
         self.X = np.array([x0, y0, v0, theta0, w0]).reshape(-1, 1)
         self.P = np.eye(self.dim)
@@ -107,7 +113,7 @@ class BicycleModel:
 
     def front(self):
         """return speed of front wheel"""
-        return np.sign(self.v) * np.sqrt(self.v ** 2 + (self.length * self.w) ** 2)
+        return np.sign(self.v) * np.sqrt(self.v**2 + (self.length * self.w) ** 2)
 
     def delta(self):
         """return steering angle of front wheel"""
@@ -118,15 +124,17 @@ class BicycleModel:
         self.X[4] = w
 
     def update(self, dt=0.1):
-        xdot = np.array([self.v * np.cos(self.theta), self.v * np.sin(self.theta), 0, self.w, 0]).reshape(-1, 1)
+        xdot = np.array(
+            [self.v * np.cos(self.theta), self.v * np.sin(self.theta), 0, self.w, 0]
+        ).reshape(-1, 1)
 
-        if can_log() and self.name == 'ekf':
-            print(f'\t\tpre-update: {self.theta=} + {xdot[3].item() * dt=}, {self.w=}')
+        if can_log() and self.name == "ekf":
+            print(f"\t\tpre-update: {self.theta=} + {xdot[3].item() * dt=}, {self.w=}")
 
         self.X = self.X + xdot * dt
 
-        if can_log() and self.name == 'ekf':
-            print('\t\tpost-update:', f'{self.theta=} ')
+        if can_log() and self.name == "ekf":
+            print("\t\tpost-update:", f"{self.theta=} ")
 
         self.X[3] = wrap_to_pi(self.theta)
 
@@ -137,13 +145,15 @@ class BicycleModelEkf(BicycleModel):
         if isinstance(q, list):
             q = np.diag(q)
         self.update(dt)
-        jA = np.array([
-            [0, 0, np.cos(self.theta), -self.v * np.sin(self.theta), 0],
-            [0, 0, np.sin(self.theta), self.v * np.cos(self.theta), 0],
-            [0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1],
-            [0, 0, 0, 0, 0],
-        ])
+        jA = np.array(
+            [
+                [0, 0, np.cos(self.theta), -self.v * np.sin(self.theta), 0],
+                [0, 0, np.sin(self.theta), self.v * np.cos(self.theta), 0],
+                [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 0],
+            ]
+        )
         jA = np.eye(self.dim) + dt * jA
         self.P = jA @ self.P @ jA.T + q
 
@@ -168,11 +178,11 @@ class BicycleModelEkf(BicycleModel):
         #     mes = np.array(mes)
         # mes = mes.reshape(-1, 1)
 
-        hx = np.sign(self.v) * np.sqrt(self.v ** 2 + (self.length * self.w) ** 2)
+        hx = np.sign(self.v) * np.sqrt(self.v**2 + (self.length * self.w) ** 2)
         if np.isclose(np.abs(self.v), 0, atol=1e-5):
             h = np.array([0, 0, 1, 0, 0])
         else:
-            h = np.array([0, 0, self.v / hx, 0, self.length ** 2 * self.w / hx])
+            h = np.array([0, 0, self.v / hx, 0, self.length**2 * self.w / hx])
         h = h.reshape(1, -1)
         self.kalman_correct(mes, cov, hx, h)
 
@@ -191,27 +201,27 @@ class BicycleModelEkf(BicycleModel):
         h = np.array([0, 0, 0, 0, 1]).reshape(1, -1)
         self.kalman_correct(mes, cov, hx, h)
 
-        if can_log() and self.name == 'ekf':
-            print(f'\t\tcorrecting wz with ({mes=}):')
-            print(f'\t\t\t{pre_theta=} --> {self.theta=}')
-            print(f'\t\t\t{pre_w=} --> {self.w=}')
+        if can_log() and self.name == "ekf":
+            print(f"\t\tcorrecting wz with ({mes=}):")
+            print(f"\t\t\t{pre_theta=} --> {self.theta=}")
+            print(f"\t\t\t{pre_w=} --> {self.w=}")
 
     def correct_delta(self, mes, cov):
         hx = np.array([self.delta()]).reshape(-1, 1)
-        d = self.v ** 2 + (self.length * self.w) ** 2
+        d = self.v**2 + (self.length * self.w) ** 2
         if d > 100:
-            print('oh oh')
+            print("oh oh")
         if np.isclose(np.abs(self.v), 0, atol=1e-5):
             # if the speed is zero, we don't correct
             return
-        h = np.array([0, 0, - self.length * self.w / d, 0, self.length * self.v / d])
+        h = np.array([0, 0, -self.length * self.w / d, 0, self.length * self.v / d])
         self.kalman_correct(mes, cov, hx, h)
 
 
 # %%
-sim_bicycle = BicycleModel(w0=0.02, name='sim')
+sim_bicycle = BicycleModel(w0=0.02, name="sim")
 # an initial non-zero estimate of the rotation speed is needed otherwise the front wheel correct will never correct w
-kf_bicycle = BicycleModelEkf(w0=0.00, name='ekf')
+kf_bicycle = BicycleModelEkf(w0=0.00, name="ekf")
 
 duration = 100
 dt = 0.01
@@ -235,8 +245,8 @@ for i, time in enumerate(time_points):
     kf_bicycle.kalman_predict([0.01] * 5, dt)
     kf_bicycle.correct_back(sim_bicycle.back(), np.diag([0.01]))
     kf_bicycle.correct_front(sim_bicycle.front(), np.diag([0.01]))
-    # kf_bicycle.correct_wz(sim_bicycle.w, np.diag([0.001]))
-    kf_bicycle.correct_delta(sim_bicycle.delta(), np.diag([0.001]))
+    kf_bicycle.correct_wz(sim_bicycle.w, np.diag([0.001]))
+    # kf_bicycle.correct_delta(sim_bicycle.delta(), np.diag([0.001]))
     # save state
     states.append(sim_bicycle.X.flatten())
     wheels.append([sim_bicycle.back(), sim_bicycle.front()])
@@ -249,7 +259,7 @@ kf_states = np.array(kf_states)
 kf_covs = np.array(kf_covs)
 
 # %%
-fig = plt.figure(layout='constrained')
+fig = plt.figure(layout="constrained")
 gs = GridSpec(3, 4, figure=fig)
 ax_xy = fig.add_subplot(gs[:2, :2])
 ax_cmd = fig.add_subplot(gs[2, :2])
@@ -257,33 +267,33 @@ ax_v = fig.add_subplot(gs[0, 2:])
 ax_w = fig.add_subplot(gs[1, 2:])
 ax_theta = fig.add_subplot(gs[2, 2:])
 
-ax_xy.set_title('XY')
-ax_xy.plot(states[:, 0], states[:, 1], label='truth')
-ax_xy.plot(kf_states[:, 0], kf_states[:, 1], label='ekf')
-ax_xy.set_aspect('equal', adjustable='box')
+ax_xy.set_title("XY")
+ax_xy.plot(states[:, 0], states[:, 1], label="truth")
+ax_xy.plot(kf_states[:, 0], kf_states[:, 1], label="ekf")
+ax_xy.set_aspect("equal", adjustable="box")
 # ax_xy.axis('square')
 
 
-ax_v.set_title('speed')
-ax_v.plot(time_points, commands[:, 0], '--', label='commands')
-ax_v.plot(time_points, states[:, 2], label='truth')
-ax_v.plot(time_points, kf_states[:, 2], label='ekf')
+ax_v.set_title("speed")
+ax_v.plot(time_points, commands[:, 0], "--", label="commands")
+ax_v.plot(time_points, states[:, 2], label="truth")
+ax_v.plot(time_points, kf_states[:, 2], label="ekf")
 ax_v.legend()
 
-ax_theta.set_title('theta')
-ax_theta.plot(time_points, states[:, 3], label='truth')
-ax_theta.plot(time_points, kf_states[:, 3], label='ekf')
+ax_theta.set_title("theta")
+ax_theta.plot(time_points, states[:, 3], label="truth")
+ax_theta.plot(time_points, kf_states[:, 3], label="ekf")
 ax_theta.legend()
 
-ax_w.set_title('w')
-ax_w.plot(time_points, commands[:, 1], '--', label='commands')
-ax_w.plot(time_points, states[:, 4], label='truth')
-ax_w.plot(time_points, kf_states[:, 4], label='ekf')
+ax_w.set_title("w")
+ax_w.plot(time_points, commands[:, 1], "--", label="commands")
+ax_w.plot(time_points, states[:, 4], label="truth")
+ax_w.plot(time_points, kf_states[:, 4], label="ekf")
 ax_w.legend()
 
-ax_cmd.set_title('commands')
-ax_cmd.plot(time_points, wheels[:, 0], label='back')
-ax_cmd.plot(time_points, wheels[:, 1], label='front')
+ax_cmd.set_title("commands")
+ax_cmd.plot(time_points, wheels[:, 0], label="back")
+ax_cmd.plot(time_points, wheels[:, 1], label="front")
 ax_cmd.legend()
 
 plt.show()
