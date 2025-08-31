@@ -40,7 +40,7 @@ class TwoPointSystem2D:
 
 # %% SIMULATION
 
-from filters.kalman import ExtendedKalmanFilter
+from robotics_algorithms.filters.kalman import ExtendedKalmanFilter
 
 s = TwoPointSystem2D(0, np.radians(10), 4)
 kf = ExtendedKalmanFilter(np.array([4, 0.5]), np.eye(2) * 5)

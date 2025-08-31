@@ -1,9 +1,6 @@
 import numpy as np
-import control as ct
-
-
-def wrap_to_pi(angle):
-    return (angle + np.pi) % (2 * np.pi) - np.pi
+from robotics_algorithms import control as ct
+from robotics_algorithms.utils.math import wrap_to_pi
 
 
 class AckermanCar(ct.NonlinearIOSystem):

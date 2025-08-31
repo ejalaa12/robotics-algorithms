@@ -1,19 +1,20 @@
-[tool.poetry]
+[project]
 name = "robotics-algorithms"
 version = "0.1.0"
-description = "A list of robotics algorithms coded in python with notebooks"
-authors = ["El Jawad Alaa <ejalaa12@gmail.com>"]
+description = ""
+authors = [
+  { name="El Jawad Alaa", email="ejalaa12@gmail.com"},
+]
 readme = "README.md"
+requires-python= ">=3.12"
 
-[tool.poetry.dependencies]
-python = "^3.12"
-numpy = "^1.26.4"
-matplotlib = "^3.8.4"
-scipy = "^1.13.1"
-
-[tool.poetry.group.dev.dependencies]
-jupyterlab = "^4.2.0"
+dependencies = [
+  "numpy >=1.24.0",
+  "scipy >=1.14.1",
+  "control >=0.9.4",
+  "matplotlib >=3.7.5",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
