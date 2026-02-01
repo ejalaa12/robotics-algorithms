@@ -13,6 +13,7 @@ dependencies = [
   "scipy >=1.14.1",
   "control >=0.9.4",
   "matplotlib >=3.7.5",
+  "notebook>=7.4.5",
 ]
 
 [build-system]
