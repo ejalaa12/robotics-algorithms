@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.gridspec import GridSpec
 
 from robotics_algorithms.utils.math import wrap_to_pi
@@ -140,7 +140,6 @@ class BicycleModel:
 
 
 class BicycleModelEkf(BicycleModel):
-
     def kalman_predict(self, q, dt=0.1):
         if isinstance(q, list):
             q = np.diag(q)
@@ -236,7 +235,7 @@ commands[:, 0] = 1.0  # 1m/s
 commands[:, 1] = generate_rotation_commands_interp(time_points, 3, 20, 7, 0.2)
 for i, time in enumerate(time_points):
     if can_log():
-        print(f'{i: >4} {"-" * 20}')
+        print(f"{i: >4} {'-' * 20}")
     v, w = commands[i]
     # control real bicycle
     sim_bicycle.control(v, w)
@@ -295,5 +294,19 @@ ax_cmd.set_title("commands")
 ax_cmd.plot(time_points, wheels[:, 0], label="back")
 ax_cmd.plot(time_points, wheels[:, 1], label="front")
 ax_cmd.legend()
+
+fig, (ax1, ax2) = plt.subplots(1, 2)
+ax1.set_title("covariance of x")
+ax1.plot(time_points, kf_covs[:, 0, 0], label="cov x")
+ax2.set_title("covariance of y")
+ax2.plot(time_points, kf_covs[:, 1, 1], label="cov y")
+# Compute eigenvalues of the covariance matrix at each time step
+eigenvalues = np.linalg.eigvals(kf_covs)
+ax1.set_title("covariance of x")
+ax1.plot(time_points, eigenvalues[:, 0], label="eig1")
+ax2.plot(time_points, eigenvalues[:, 1], label="eig2")
+ax1.legend()
+ax2.legend()
+
 
 plt.show()

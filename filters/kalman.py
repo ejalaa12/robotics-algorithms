@@ -6,8 +6,9 @@ Created on Fri Mar  5 15:59:53 2021
 @author: ejalaa
 """
 
-import numpy as np
 from typing import Callable
+
+import numpy as np
 
 
 class KalmanFilter:
@@ -15,9 +16,9 @@ class KalmanFilter:
     Generic Kalman Filter Implementation in Python
     """
 
-    def __init__(self, X0: np.ndarray, G0: np.ndarray):
-        self.X = X0.copy()
-        self.G = G0.copy()
+    def __init__(self, mu0: np.ndarray, cov0: np.ndarray):
+        self.mu = mu0.copy()
+        self.cov = cov0.copy()
 
     def predict(
         self,
@@ -38,9 +39,9 @@ class KalmanFilter:
     def correct(self, Z: np.ndarray, H: np.ndarray, R: np.ndarray | None = None):
         if R is None:
             R = np.zeros((Z.size, Z.size))
-        y = Z - H @ self.X
-        S = H @ self.G @ H.T + R
-        K = self.G @ H.T @ np.linalg.inv(S)
+        y = Z - H @ self.mu
+        S = H @ self.cov @ H.T + R
+        K = self.cov @ H.T @ np.linalg.inv(S)
 
         I = np.eye(self.cov.shape[0])
 
@@ -57,26 +58,26 @@ class ExtendedKalmanFilter(KalmanFilter):
         u: np.ndarray | None = None,
     ):
         if u is None:
-            self.X = f(self.X)
-            JF = jf(self.X)
+            self.mu = f(self.mu)
+            JF = jf(self.mu)
         else:
-            self.X = f(self.X, u)
-            JF = jf(self.X, u)
+            self.mu = f(self.mu, u)
+            JF = jf(self.mu, u)
         if Q is None:
-            Q = np.zeros((self.X.shape[0], self.X.shape[0]))
-        self.G = JF @ self.G @ JF.T + Q
+            Q = np.zeros((self.mu.shape[0], self.mu.shape[0]))
+        self.cov = JF @ self.cov @ JF.T + Q
 
     def correct(self, Z: np.ndarray, h: Callable, H: np.ndarray, R: np.ndarray = None):
         if R is None:
             R = np.zeros((Z.size, Z.size))
-        y = Z - h(self.X)
-        S = H @ self.G @ H.T + R
-        K = self.G @ H.T @ np.linalg.inv(S)
+        y = Z - h(self.mu)
+        S = H @ self.cov @ H.T + R
+        K = self.cov @ H.T @ np.linalg.inv(S)
 
-        I = np.eye(self.G.shape[0])
+        I = np.eye(self.cov.shape[0])
 
-        self.X = self.X + K @ y
-        self.G = (I - K @ H) @ self.G
+        self.mu = self.mu + K @ y
+        self.cov = (I - K @ H) @ self.cov
 
 
 # %%
@@ -88,7 +89,7 @@ def test_kalman():
         kf.predict(np.eye(2))
         obs = np.random.normal([1, 2], 0.3)
         kf.correct(obs, np.eye(2), 0.3**2 * np.eye(2))
-    return np.linalg.norm(kf.X - [1, 2])
+    return np.linalg.norm(kf.mu - [1, 2])
 
 
 # %%
@@ -100,7 +101,7 @@ def test_kalman1d():
         kf.predict(np.eye(1))
         obs = np.random.normal([1], 0.3)
         kf.correct(obs, np.eye(1), 0.3**2 * np.eye(1))
-    return np.linalg.norm(kf.X - [1])
+    return np.linalg.norm(kf.mu - [1])
 
 
 # %%
